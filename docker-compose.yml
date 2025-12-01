@@ -15,7 +15,6 @@ services:
       - rabbitmq/q-rabbitmq-auth.env
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
-    # Do some health checks to see if q-rabbitmq is running before starting the other services
     healthcheck: 
       test: rabbitmq-diagnostics -q status
       interval: 15s
@@ -60,6 +59,50 @@ services:
       - q-rabbitmq-network
     env_file:
       - services/shipping/.env
+    depends_on:
+      q-rabbitmq:
+        condition: service_healthy
+
+  # --- NOVOS SERVIÇOS ---
+
+  report-service:
+    container_name: report-service
+    build:
+      context: .
+      target: report-service
+    restart: unless-stopped
+    networks:
+      - q-rabbitmq-network
+    env_file:
+      - services/report/.env
+    depends_on:
+      q-rabbitmq:
+        condition: service_healthy
+
+  fraud-service:
+    container_name: fraud-service
+    build:
+      context: .
+      target: fraud-service
+    restart: unless-stopped
+    networks:
+      - q-rabbitmq-network
+    env_file:
+      - services/fraud/.env
+    depends_on:
+      q-rabbitmq:
+        condition: service_healthy
+
+  inventory-service:
+    container_name: inventory-service
+    build:
+      context: .
+      target: inventory-service
+    restart: unless-stopped
+    networks:
+      - q-rabbitmq-network
+    env_file:
+      - services/inventory/.env
     depends_on:
       q-rabbitmq:
         condition: service_healthy

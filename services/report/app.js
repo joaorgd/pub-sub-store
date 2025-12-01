@@ -28,3 +28,20 @@ async function consume() {
 } 
 
 consume()
+
+async function processMessage(msg) {
+    const orderData = JSON.parse(msg.content)
+    // Adiciona produtos ao relatório
+    await updateReport(orderData.products)
+    // Imprime o relatório atualizado
+    await printReport()
+}
+
+async function consume() {
+    console.log(`REPORT SERVICE STARTED`)
+    // Nome da fila hardcoded ou via env (adicione .env na pasta report se necessário: RABBITMQ_QUEUE_NAME=report)
+    const queueName = 'report'; 
+    await (await RabbitMQService.getInstance()).consume(queueName, (msg) => {processMessage(msg)})
+} 
+
+consume()

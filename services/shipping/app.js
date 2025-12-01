@@ -19,6 +19,27 @@ async function processMessage(msg) {
     }
 }
 
+async function processMessage(msg) {
+    const deliveryData = JSON.parse(msg.content)
+    try {
+        if(deliveryData.address && deliveryData.address.zipCode) {
+            console.log(`✔ SUCCESS, SHIPPING AUTHORIZED...`)
+            console.log(deliveryData.address)
+            
+            // Envia para Report (já existia)
+            await (await RabbitMQService.getInstance()).send('report', deliveryData)
+            
+            // NOVO: Envia para Inventory [cite: 28]
+            await (await RabbitMQService.getInstance()).send('inventory', deliveryData)
+            
+        } else {
+             // ... erro ...
+        }
+    } catch (error) {
+        console.log(`X ERROR TO PROCESS: ${error.response}`)
+    }
+}
+
 async function consume() {
     console.log(`SUCCESSFULLY SUBSCRIBED TO QUEUE: ${process.env.RABBITMQ_QUEUE_NAME}`)
     await (await RabbitMQService.getInstance()).consume(process.env.RABBITMQ_QUEUE_NAME, (msg) => {processMessage(msg)})
