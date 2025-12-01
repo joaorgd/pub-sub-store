@@ -9,32 +9,17 @@ async function processMessage(msg) {
         if(deliveryData.address && deliveryData.address.zipCode) {
             console.log(`✔ SUCCESS, SHIPPING AUTHORIZED, SEND TO:`)
             console.log(deliveryData.address)
-        } else {
-            console.log(`X ERROR, WE CAN'T SEND WITHOUT ZIPCODE :'(`)
-        }
-        await (await RabbitMQService.getInstance()).send('report', deliveryData)
-
-    } catch (error) {
-        console.log(`X ERROR TO PROCESS: ${error.response}`)
-    }
-}
-
-async function processMessage(msg) {
-    const deliveryData = JSON.parse(msg.content)
-    try {
-        if(deliveryData.address && deliveryData.address.zipCode) {
-            console.log(`✔ SUCCESS, SHIPPING AUTHORIZED...`)
-            console.log(deliveryData.address)
             
-            // Envia para Report (já existia)
+            // Envia para Report
             await (await RabbitMQService.getInstance()).send('report', deliveryData)
             
-            // NOVO: Envia para Inventory [cite: 28]
+            // NOVO: Envia para Inventory para baixa de estoque
             await (await RabbitMQService.getInstance()).send('inventory', deliveryData)
             
         } else {
-             // ... erro ...
+            console.log(`X ERROR, WE CAN'T SEND WITHOUT ZIPCODE :'(`)
         }
+
     } catch (error) {
         console.log(`X ERROR TO PROCESS: ${error.response}`)
     }

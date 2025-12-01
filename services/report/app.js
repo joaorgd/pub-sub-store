@@ -4,6 +4,7 @@ const path = require('path')
 require('dotenv').config({ path: path.resolve(__dirname, '.env') })
 
 var report = {}
+
 async function updateReport(products) {
     for(let product of products) {
         if(!product.name) {
@@ -14,7 +15,6 @@ async function updateReport(products) {
             report[product.name]++;
         }
     }
-
 }
 
 async function printReport() {
@@ -22,12 +22,6 @@ async function printReport() {
         console.log(`${key} = ${value} sales`);
       }
 }
-
-async function consume() {
-    //TODO: Constuir a comunicação com a fila 
-} 
-
-consume()
 
 async function processMessage(msg) {
     const orderData = JSON.parse(msg.content)
@@ -39,8 +33,8 @@ async function processMessage(msg) {
 
 async function consume() {
     console.log(`REPORT SERVICE STARTED`)
-    // Nome da fila hardcoded ou via env (adicione .env na pasta report se necessário: RABBITMQ_QUEUE_NAME=report)
-    const queueName = 'report'; 
+    // Usa a variável de ambiente ou um padrão
+    const queueName = process.env.RABBITMQ_QUEUE_NAME || 'report'; 
     await (await RabbitMQService.getInstance()).consume(queueName, (msg) => {processMessage(msg)})
 } 
 

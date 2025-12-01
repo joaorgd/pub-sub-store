@@ -1,7 +1,7 @@
 {
-  "name": "fraud",
+  "name": "inventory",
   "version": "1.0.0",
-  "description": "Serviço responsável por armazanar os dados dos produtos",
+  "description": "Serviço responsável por atualizar o estoque",
   "main": "app.js",
   "license": "ISC",
   "dependencies": {

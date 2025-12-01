@@ -3,30 +3,6 @@ const path = require('path')
 
 require('dotenv').config({ path: path.resolve(__dirname, '.env') })
 
-// ... imports e validação mantêm-se iguais ...
-
-async function processMessage(msg) {
-    const orderData = JSON.parse(msg.content)
-    try {
-        if(isValidOrder(orderData)) {
-            // MUDANÇA AQUI: Em vez de enviar para 'shipping', enviamos para 'fraud-check'
-            await (await RabbitMQService.getInstance()).send('fraud-check', orderData)
-            console.log(`✔ ORDER VALIDATED, SENT TO FRAUD CHECK`)
-        } else {
-            await (await RabbitMQService.getInstance()).send('contact', { 
-                "clientFullName": orderData.name,
-                "to": orderData.email,
-                "subject": "Pedido Reprovado",
-                "text": `${orderData.name}, seus dados não foram suficientes...`,
-            })
-            console.log(`X ORDER REJECTED`)
-        }
-    } catch (error) {
-        console.log(`X ERROR TO PROCESS: ${error.response}`)
-    }
-}
-// ... resto do código igual ...
-
 function isValidOrder(orderData) {
     if(!orderData.products  || orderData.products.length <= 0) { //SEM PRODUTO
         return false
@@ -41,15 +17,9 @@ async function processMessage(msg) {
     const orderData = JSON.parse(msg.content)
     try {
         if(isValidOrder(orderData)) {
-            await (await RabbitMQService.getInstance()).send('contact', { 
-                "clientFullName": orderData.name,
-                "to": orderData.email,
-                "subject": "Pedido Aprovado",
-                "text": `${orderData.name}, seu pedido de disco de vinil acaba de ser aprovado, e esta sendo preparado para entrega!`,
-            })
-
-            await (await RabbitMQService.getInstance()).send('shipping', orderData)
-            console.log(`✔ ORDER APPROVED`)
+            // MUDANÇA: Envia para validação de fraude em vez de shipping direto
+            await (await RabbitMQService.getInstance()).send('fraud-check', orderData)
+            console.log(`✔ ORDER VALIDATED, SENT TO FRAUD CHECK`)
         } else {
             await (await RabbitMQService.getInstance()).send('contact', { 
                 "clientFullName": orderData.name,
