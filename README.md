@@ -394,3 +394,78 @@ Este exercício prático, incluindo o seu código, foi elaborado por Francielly 
 O código deste repositório possui uma licença MIT. O roteiro descrito acima possui uma licença CC-BY.
  
 
+## 🧪 Como Testar (Cenários de Uso)
+
+Para validar a arquitetura, utilize o **RabbitMQ Management** (`http://localhost:15672`), acesse a fila `orders` e publique os seguintes payloads JSON.
+
+### 1. O "Caminho Feliz" (Sucesso Padrão)
+**Objetivo:** Mostrar o fluxo completo funcionando perfeitamente de ponta a ponta. O pedido é válido e abaixo do limite de fraude.
+**Resultado Esperado:** Todos os serviços processam (`order` -> `fraud` -> `shipping` -> `inventory` + `report`).
+
+```json
+{
+    "name": "Maria Silva",
+    "email": "maria.silva@teste.com",
+    "cpf": "111.222.333-44",
+    "creditCard": {
+        "number": "1234-5678-9012-3456",
+        "securityNumber": "123"
+    },
+    "products": [
+        {
+            "name": "Disco The Dark Side of the Moon",
+            "value": "250.00"
+        }
+    ],
+    "address": {
+        "zipCode": "70000-000",
+        "street": "Asa Norte",
+        "number": "10",
+        "neighborhood": "Brasília",
+        "city": "DF",
+        "state": "DF"
+    }
+}
+```
+
+### 2. O Bloqueio de Segurança (Cenário de Fraude)
+**Objetivo:** Demonstrar a nova funcionalidade de segurança implementada na Sprint Final. O valor total excede R$ 5.000,00.
+**Resultado Esperado:** O serviço `fraud-service` rejeita o pedido. `shipping`, `inventory` e `report` não são acionados (economia de recursos).
+
+```json
+{
+    "name": "Carlos Golpista",
+    "email": "perigo@teste.com",
+    "cpf": "999.888.777-66",
+    "products": [
+        {
+            "name": "Coleção Completa Beatles (Edição Ouro)",
+            "value": "8000.00"
+        }
+    ],
+    "address": {
+        "zipCode": "00000-000",
+        "street": "Rua Desconhecida",
+        "number": "0",
+        "neighborhood": "Sombrio",
+        "city": "Gotham",
+        "state": "XX"
+    }
+}
+```
+
+### 3. O Pedido Inválido (Erro de Validação)
+**Objetivo:** Mostrar que o primeiro serviço (`order`) protege o sistema de dados ruins. A lista de produtos está vazia.
+**Resultado Esperado:** O serviço `order-service` rejeita imediatamente (`X ORDER REJECTED`). Nenhum outro serviço é acionado.
+
+```json
+{
+    "name": "João Esquecido",
+    "email": "joao@teste.com",
+    "cpf": "123.123.123-12",
+    "address": {
+        "zipCode": "12345-678"
+    },
+    "products": [] 
+}
+```
